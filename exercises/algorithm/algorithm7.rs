@@ -3,7 +3,7 @@
 	This question requires you to use a stack to achieve a bracket match
 */
 
-// I AM NOT DONE
+
 #[derive(Debug)]
 struct Stack<T> {
 	size: usize,
@@ -32,9 +32,13 @@ impl<T> Stack<T> {
 	}
 	fn pop(&mut self) -> Option<T> {
 		// TODO
-		None
+		if self.size > 0 {
+            self.size = self.size - 1;
+        }
+        self.data.pop()
 	}
-	fn peek(&self) -> Option<&T> {
+    //这里竟然有一处错别字
+	fn peak(&self) -> Option<&T> {
 		if 0 == self.size {
 			return None;
 		}
@@ -101,8 +105,40 @@ impl<'a, T> Iterator for IterMut<'a, T> {
 
 fn bracket_match(bracket: &str) -> bool
 {
+    let mut bracket_set =  std::collections::HashSet::new();
+    bracket_set.insert('(');
+    bracket_set.insert(')');
+    bracket_set.insert('{');
+    bracket_set.insert('}');
+    bracket_set.insert('[');
+    bracket_set.insert(']');
+    let match_fn = |a: char, b: char| {
+        match (a, b) {
+            ('{', '}') => true,
+            ('(', ')') => true,
+            ('[', ']') => true,
+            _ => false,
+        }
+    };
+
+    let mut stack = Stack::new();
 	//TODO
-	true
+    bracket.chars().filter(|c| bracket_set.contains(c)).for_each(|c| {
+        println!("{}", stack.size);
+        if stack.peak().is_some_and(|&peak| match_fn(peak, c)) {
+            println!("pop {}", c);
+            stack.pop();
+        } else {
+            println!("push {}", c);
+            stack.push(c);
+        }
+    });
+
+	if stack.size > 0 {
+        false
+    } else {
+        true
+    }
 }
 
 #[cfg(test)]

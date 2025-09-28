@@ -2,7 +2,7 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
+
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -69,15 +69,69 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
-	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+    pub fn merge(mut list_a:LinkedList<T>, mut list_b:LinkedList<T>) -> Self
+    where T: PartialOrd
+    {
+        // 如果 a 为空，返回 b
+        if list_a.start.is_none() {
+            return list_b;
         }
-	}
+        // 如果 b 为空，返回 a
+        if list_b.start.is_none() {
+            return list_a;
+        }
+
+        let mut merged_list = LinkedList::new();
+        merged_list.length = list_a.length + list_b.length;
+
+        // 使用裸指针进行操作
+        let mut head_a = list_a.start;
+        let mut head_b = list_b.start;
+
+        // 确定新链表的头节点
+        unsafe {
+            if (*head_a.unwrap().as_ptr()).val <= (*head_b.unwrap().as_ptr()).val {
+                merged_list.start = head_a;
+                head_a = (*head_a.unwrap().as_ptr()).next;
+            } else {
+                merged_list.start = head_b;
+                head_b = (*head_b.unwrap().as_ptr()).next;
+            }
+            merged_list.end = merged_list.start;
+
+            // 循环合并剩余的节点
+            while head_a.is_some() && head_b.is_some() {
+                let mut current_end = merged_list.end.unwrap().as_ptr();
+                if (*head_a.unwrap().as_ptr()).val <= (*head_b.unwrap().as_ptr()).val {
+                    (*current_end).next = head_a;
+                    merged_list.end = head_a;
+                    head_a = (*head_a.unwrap().as_ptr()).next;
+                } else {
+                    (*current_end).next = head_b;
+                    merged_list.end = head_b;
+                    head_b = (*head_b.unwrap().as_ptr()).next;
+                }
+            }
+
+            // 链接剩余的部分
+            let mut current_end = merged_list.end.unwrap().as_ptr();
+            if head_a.is_some() {
+                (*current_end).next = head_a;
+                merged_list.end = list_a.end;
+            } else if head_b.is_some() {
+                (*current_end).next = head_b;
+                merged_list.end = list_b.end;
+            }
+        }
+        
+        // 防止 list_a 和 list_b 的 Drop 实现释放已被合并的节点
+        list_a.start = None;
+        list_a.end = None;
+        list_b.start = None;
+        list_b.end = None;
+
+        merged_list
+    }
 }
 
 impl<T> Display for LinkedList<T>
